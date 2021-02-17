@@ -1,5 +1,10 @@
 // server.js
 // where your node app starts
+const isUTCDate = (date) => new Date(date).toString() != 'Invalid Date'
+const isUnixDate = (date) => !isNaN(date)
+
+const dateToUTC = (date) => new Date(date).toUTCString()
+const dateToUnix = (date) => new Date(date).valueOf()
 
 // init project
 var express = require('express');
@@ -24,7 +29,28 @@ app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
+app.get("/api/timestamp/", function (req, res) {
+  res.json({unix: dateToUnix(new Date()), utc: dateToUTC(new Date())});
+});
 
+app.get("/api/timestamp/:data?", function (req, res) {
+  const dateReceived = req.param('data');
+  const obj = {unix: '', utc: ''}
+
+  if(isUTCDate(dateReceived)){
+    obj.utc = dateToUTC(dateReceived)
+    obj.unix = dateToUnix(dateReceived)
+  }else{
+    if(isUnixDate(dateReceived)){
+      obj.utc = dateToUTC(Number.parseInt(dateReceived))
+      obj.unix = dateToUnix(Number.parseInt(dateReceived))
+    }else{
+      res.json({ error : "Invalid Date" })
+      return
+    }
+  }
+  res.json(obj);
+});
 
 // listen for requests :)
 var listener = app.listen(process.env.PORT, function () {
